@@ -2,7 +2,7 @@
 Link:
 https://datapao.notion.site/The-Big-IMDB-quest-54dae47fbe8b4e97b87dc60379f5c28d
 
-How to run:
+How to run: Just run the script and the results will be in results.csv file.
 
 # The Big IMDB quest
 

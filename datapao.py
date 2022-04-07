@@ -1,6 +1,16 @@
 import requests
 from bs4 import BeautifulSoup
 import re
+import csv
+
+#Database of movies: 4 lists
+#Normally I use SQLite, but since this is a small asssignment I won't bother with that :)
+class MoviesDB:
+    def __init__(self, titles, ratings, raters, oscars):
+        self.titles = titles
+        self.ratings = ratings
+        self.raters = raters
+        self.oscars = oscars
 
 #Returns a list of (movie title, rating, number of ratings, number of Oscars)
 def Scraper():
@@ -11,15 +21,15 @@ def Scraper():
     #Top 20 movie titles in a list
     titles = [i.text for i in movies]
     
+    #This is a list of strings like: "<strong title="9.2 based on 2,570,026 user ratings">9.2</strong>"
     numbers = soup.select('td.imdbRating strong')[:20]
     #Rating values list
     ratings = []
     #Number of ratings list
     raters = []
     for i in numbers:
-        j = i['title']
-        ratings.append(j[:3])
-        raters.append(re.search('on (.*) user', j).group(1))
+        ratings.append(float(i.text))
+        raters.append(int(re.search('on (.*) user', i['title']).group(1).replace(',','')))
     
     #Number of Oscars won (no nominations) list
     oscars = []
@@ -33,8 +43,33 @@ def Scraper():
         else:
             oscars.append(0)
     
-    return list(zip(titles, ratings, raters, oscars))
+    return MoviesDB(titles, ratings, raters, oscars)
 
-def ReviewPenalizer():
+def ReviewPenalizer(ratings, raters):
+    m = max(raters)
+    return [(i*10 - int((m-j)/100000))/10 for i, j in zip(ratings, raters)]
 
-def OscarCalculator():
+def OscarCalculator(ratings, oscars):
+    def calc(oscars):
+        if(oscars > 10):
+            return 1.5
+        elif(oscars > 5):
+            return 1
+        elif(oscars > 2):
+            return 0.5
+        elif(oscars > 0):
+            return 0.3
+        return 0
+    
+    return [i+calc(j) for i, j in zip(ratings, oscars)]
+
+data = Scraper()
+ratings2 = ReviewPenalizer(data.ratings, data.raters)
+ratings2 = OscarCalculator(ratings2, data.oscars)
+
+data2 = list(zip(ratings2, data.titles, data.ratings, data.raters, data.oscars))
+data2.sort(key=lambda i: i[0], reverse=True)
+with open('results.csv', 'w', encoding='utf-8', newline='') as f:
+    w = csv.writer(f)
+    w.writerow(["Adjusted rating", "Title", "Rating", "Number of ratings", "Number of Oscars won"])
+    w.writerows(data2)
