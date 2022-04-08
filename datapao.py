@@ -2,6 +2,7 @@ import requests
 from bs4 import BeautifulSoup
 import re
 import csv
+import unittest
 
 #Database of movies: 4 lists
 #Normally I use SQLite, but since this is a small asssignment I won't bother with that :)
@@ -73,3 +74,21 @@ with open('results.csv', 'w', encoding='utf-8', newline='') as f:
     w = csv.writer(f)
     w.writerow(["Adjusted rating", "Title", "Rating", "Number of ratings", "Number of Oscars won"])
     w.writerows(data2)
+
+#%%
+class Test(unittest.TestCase):
+    def test_Scraper(self):
+        self.assertEqual(len(data.titles), 20)
+        self.assertIsInstance(data.ratings[19], float)
+        self.assertIsInstance(data.raters[19], int)
+        self.assertEqual(len(data.oscars), 20)
+    
+    def test_ReviewPenalizer(self):
+        self.assertEqual(ReviewPenalizer([10], [100]), [10])
+        self.assertEqual(ReviewPenalizer([10, 10], [100, 100099]), [10, 10])
+        self.assertEqual(ReviewPenalizer([10, 10, 10], [100, 100100, 200100]), [9.8, 9.9, 10])
+
+    def test_OscarCalculator(self):
+        self.assertEqual(OscarCalculator([0, 0, 0, 0, 0], [0, 2, 4, 8, 16]), [0, 0.3, 0.5, 1, 1.5])
+
+unittest.main()
